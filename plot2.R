@@ -31,18 +31,19 @@ SCC <- readRDS("Source_Classification_Code.rds")
 ## Process data so that a plot can be created
 ##################################################################
 
-emissionsByYear <- aggregate(NEI$Emissions,by=list(Category=NEI$year),FUN=sum)
+baltiNEI <- subset(NEI, fips == "24510")
+emissionsByYear <- aggregate(baltiNEI$Emissions,by=list(Category=baltiNEI$year),FUN=sum)
 
 ##################################################################
 ## Step 4
 ## Create required png file
 ##################################################################
 
-png("plot1.png")
+png("plot2.png")
 options(scipen=999)
 plot(emissionsByYear$Category,emissionsByYear$x,
      xlab="Year",ylab="Emissions (tons)",
-     main="Total PM2.5 Emission for 1999, 2002, 2005, and 2008",
+     main="Total Baltimore PM2.5 Emission for 1999, 2002, 2005, and 2008",
      xaxt="n",type="l")
 points(emissionsByYear$Category,emissionsByYear$x)
 axis(1,at=c(1999,2002,2005,2008),labels=c("1999","2002","2005","2008"))
