@@ -31,20 +31,43 @@ NEI <- readRDS("summarySCC_PM25.rds")
 ## Process data so that a plot can be created
 ##################################################################
 
-# Use aggregate function to aggregate emissions by year
-emissionsByYear <- aggregate(NEI$Emissions,by=list(Category=NEI$year),FUN=sum)
+# load dplyr library to manipulate the dataframe
+library(dplyr)
+# subset the data.frame on fips for Baltimore (24510) and type (ON-ROAD)
+baltiNEI <- subset(NEI, fips == "24510")
+baltiNEI <- subset(baltiNEI, type == "ON-ROAD")
+# use dplyr to reshape data (grouping by year and type)
+baltiNEI2 <- baltiNEI %>% group_by(year) %>% summarize_at(vars(Emissions),sum)
+
+# subset the data.frame on fips for LA (06037) and type (ON-ROAD)
+laNEI <- subset(NEI, fips == "06037")
+laNEI <- subset(laNEI, type == "ON-ROAD")
+# use dplyr to reshape data (grouping by year and type)
+laNEI2 <- laNEI %>% group_by(year) %>% summarize_at(vars(Emissions),sum)
+
 
 ##################################################################
 ## Step 4
 ## Create required png file
 ##################################################################
 
-# open png file for writing
-png("plot1.png")
 
-# create bar plot using base system
-barplot(height=emissionsByYear$x,names.arg=emissionsByYear$Category,
-     xlab="Year",ylab="PM2.5 Emissions (tons)",
-     main="Total PM2.5 Emission for 1999, 2002, 2005, and 2008")
+# open png file for writing
+png("plot6.png",width=880, height=480)
+# Create 1x2 plot canvas
+par(mfrow = c(1,2))
+# stop R printing number in scientific notation
+options(scipen=999)
+# create plots
+barplot(names.arg=laNEI2$year,height=laNEI2$Emissions,
+        xlab="Year",ylab="PM2.5 Emissions (tons)",
+        ylim=c(0,5000),
+        main="LA Vehicle Emissions\n from 1999 to 2008")
+barplot(names.arg=baltiNEI2$year,height=baltiNEI2$Emissions,
+        xlab="Year",ylab="PM2.5 Emissions (tons)",
+        ylim=c(0,5000),
+        main="Baltimore Vehicle Emissions\n from 1999 to 2008")
+
+
 # close device to write png file
 dev.off()

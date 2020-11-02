@@ -14,7 +14,7 @@ if (!file.exists(dataDestination)) {
 }
 
 # if summarySCC_PM25.rds doesn't exist unzip the file just downloaded
-if (!file.exists("summarySCC_PM25.rds")) {
+if (!file.exists("summarySCC_PM25.rds") | !file.exists("Source_Classification_Code.rds")) {
   unzip(dataDestination)
 }
 
@@ -24,14 +24,16 @@ if (!file.exists("summarySCC_PM25.rds")) {
 ##################################################################
 
 NEI <- readRDS("summarySCC_PM25.rds")
-SCC <- readRDS("Source_Classification_Code.rds")
+#SCC <- readRDS("Source_Classification_Code.rds")
 
 ##################################################################
 ## Step 3
 ## Process data so that a plot can be created
 ##################################################################
 
+# subset the data.frame on fips for Baltimore (24510)
 baltiNEI <- subset(NEI, fips == "24510")
+# Use aggregate function to aggregate emissions by year
 emissionsByYear <- aggregate(baltiNEI$Emissions,by=list(Category=baltiNEI$year),FUN=sum)
 
 ##################################################################
@@ -39,12 +41,12 @@ emissionsByYear <- aggregate(baltiNEI$Emissions,by=list(Category=baltiNEI$year),
 ## Create required png file
 ##################################################################
 
+# open png file for writing
 png("plot2.png")
-options(scipen=999)
-plot(emissionsByYear$Category,emissionsByYear$x,
-     xlab="Year",ylab="Emissions (tons)",
-     main="Total Baltimore PM2.5 Emission for 1999, 2002, 2005, and 2008",
-     xaxt="n",type="l")
-points(emissionsByYear$Category,emissionsByYear$x)
-axis(1,at=c(1999,2002,2005,2008),labels=c("1999","2002","2005","2008"))
+
+# create bar plot using base system
+barplot(names.arg=emissionsByYear$Category,height=emissionsByYear$x,
+     xlab="Year",ylab="PM2.5 Emissions (tons)",
+     main="Total Baltimore PM2.5 Emission for 1999, 2002, 2005, and 2008")
+# close device to write png file
 dev.off()

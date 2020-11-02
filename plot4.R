@@ -24,15 +24,26 @@ if (!file.exists("summarySCC_PM25.rds") | !file.exists("Source_Classification_Co
 ##################################################################
 
 NEI <- readRDS("summarySCC_PM25.rds")
-#SCC <- readRDS("Source_Classification_Code.rds")
+SCC <- readRDS("Source_Classification_Code.rds")
 
 ##################################################################
 ## Step 3
 ## Process data so that a plot can be created
 ##################################################################
 
+# The EPA SCC database is located online here: https://ofmpub.epa.gov/sccwebservices/sccsearch/
+# You need to search through the various levels to find where Coal & Combustion occur
+# Now you create logical vectors for SCC rows containing "Coal" & "Combustion"
+combustion <- grepl("[cC]ombustion",SCC$SCC.Level.One)
+coal <- grepl("[cC]oal",SCC$SCC.Level.Three)
+# from  logical vectors create data.frame with SCC values corresponding to logical vector
+sccCoal <- data.frame(as.character(SCC[coal & combustion,"SCC"]))
+# add colname for merge to work
+colnames(sccCoal) <- c("SCC")
+# merge NEI and sccCoal (only merge where rows on both sides)
+myMerge <- merge(NEI,sccCoal,by="SCC")
 # Use aggregate function to aggregate emissions by year
-emissionsByYear <- aggregate(NEI$Emissions,by=list(Category=NEI$year),FUN=sum)
+emissionsByYear <- aggregate(myMerge$Emissions,by=list(Category=myMerge$year),FUN=sum)
 
 ##################################################################
 ## Step 4
@@ -40,11 +51,12 @@ emissionsByYear <- aggregate(NEI$Emissions,by=list(Category=NEI$year),FUN=sum)
 ##################################################################
 
 # open png file for writing
-png("plot1.png")
-
+png("plot4.png")
+# stop R printing number in scientific notation
+options(scipen=999)
 # create bar plot using base system
-barplot(height=emissionsByYear$x,names.arg=emissionsByYear$Category,
+barplot(names.arg=emissionsByYear$Category,height=emissionsByYear$x,
      xlab="Year",ylab="PM2.5 Emissions (tons)",
-     main="Total PM2.5 Emission for 1999, 2002, 2005, and 2008")
+     main="US Coal combustion-related PM2.5 Emissions from 1999–2008")
 # close device to write png file
 dev.off()

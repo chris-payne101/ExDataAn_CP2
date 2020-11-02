@@ -14,7 +14,7 @@ if (!file.exists(dataDestination)) {
 }
 
 # if summarySCC_PM25.rds doesn't exist unzip the file just downloaded
-if (!file.exists("summarySCC_PM25.rds")) {
+if (!file.exists("summarySCC_PM25.rds") | !file.exists("Source_Classification_Code.rds")) {
   unzip(dataDestination)
 }
 
@@ -24,14 +24,18 @@ if (!file.exists("summarySCC_PM25.rds")) {
 ##################################################################
 
 NEI <- readRDS("summarySCC_PM25.rds")
-SCC <- readRDS("Source_Classification_Code.rds")
+#SCC <- readRDS("Source_Classification_Code.rds")
 
 ##################################################################
 ## Step 3
 ## Process data so that a plot can be created
 ##################################################################
+
+# load dplyr library to manipulate the dataframe
 library(dplyr)
+# subset the data.frame on fips for Baltimore (24510)
 baltiNEI <- subset(NEI, fips == "24510")
+# use dplyr to reshape data (grouping by year and type)
 baltiNEI2 <- baltiNEI %>% group_by(year,type) %>% summarize_at(vars(Emissions),sum)
 
 ##################################################################
@@ -39,13 +43,18 @@ baltiNEI2 <- baltiNEI %>% group_by(year,type) %>% summarize_at(vars(Emissions),s
 ## Create required png file
 ##################################################################
 
+# load the ggplot2 library
 library(ggplot2)
+# open png file for writing
 png("plot3.png")
+# stop R printing number in scientific notation
 options(scipen=999)
+# create plot
 myplot <- ggplot(data=baltiNEI2, aes(x = year, y = Emissions,color=factor(type))) +
        geom_line() + geom_point(size=4) +
        labs(title = "Baltimore PM2.5 Emission by Type for 1999, 2002, 2005, and 2008"
-              ,x = "Year", y = "Emissions (tons)", color = "Type")
-  
+              ,x = "Year", y = "PM2.5 Emissions (tons)", color = "Type")
+# print myplot to png file
 print(myplot)
+# close device to write png file
 dev.off()
